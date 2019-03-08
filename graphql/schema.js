@@ -1,5 +1,5 @@
 // const { buildSchema } = require('graphql');
-const fetched_data = require('../fetched_data');
+const { fetch_author, fetch_book } = require('../fetched_data');
 const {
   GraphQLSchema,
   GraphQLObjectType,
@@ -37,8 +37,15 @@ const AuthorType = new GraphQLObjectType({
     },
     books: {
       type: GraphQLList(BookType),
-      resolve: async json =>
-        await json.GoodreadsResponse.author[0].books[0].book,
+      resolve: async json => {
+        const books = await json.GoodreadsResponse.author[0].books[0].book.map(
+          item => fetch_book(item.id[0]._)
+        );
+
+        const res = await books;
+        console.log(res);
+        return await json.GoodreadsResponse.author[0].books[0].book;
+      },
     },
   }),
 });
@@ -55,7 +62,7 @@ schema = new GraphQLSchema({
             type: GraphQLInt,
           },
         },
-        resolve: async (root, args) => await fetched_data(args.id),
+        resolve: async (root, args) => await fetch_author(args.id),
       },
     }),
   }),
